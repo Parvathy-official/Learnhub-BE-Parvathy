@@ -129,10 +129,14 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# Frontend URLs
+USER_FRONTEND_URL = os.getenv('USER_FRONTEND_URL', 'https://jasimdigital.online')
+ADMIN_FRONTEND_URL = os.getenv('ADMIN_FRONTEND_URL', 'https://e-learningadmin-fe.netlify.app')
+
 # CORS configuration
 CORS_ALLOWED_ORIGINS = [
-    os.getenv('USER_FRONTEND_URL', 'http://localhost:5173'),
-    os.getenv('ADMIN_FRONTEND_URL', 'http://localhost:5174'),
+    USER_FRONTEND_URL,
+    ADMIN_FRONTEND_URL,
     'http://localhost:5173',
     'http://localhost:5174',
     'http://localhost:5175',

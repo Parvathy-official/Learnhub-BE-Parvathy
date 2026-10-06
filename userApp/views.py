@@ -1,5 +1,6 @@
 import json
 import logging
+from typing import Any
 from decimal import Decimal
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -926,7 +927,7 @@ def payment_status(request, order_id):
         check_and_fulfill_razorpay_order(payment)
         payment.refresh_from_db()
 
-    res = {
+    res: dict[str, Any] = {
         'order_id': payment.razorpay_order_id,
         'status': payment.status,
         'amount': payment.amount,
@@ -935,14 +936,15 @@ def payment_status(request, order_id):
     }
 
     if payment.status == 'paid' and payment.user:
-        tokens = generate_tokens(payment.user)
+        target_user = payment.user
+        tokens = generate_tokens(target_user)
         res['access'] = tokens['access']
         res['refresh'] = tokens['refresh']
         res['user'] = {
-            'id': payment.user.id,
-            'name': payment.user.name,
-            'email': payment.user.email,
-            'avatar': payment.user.avatar,
+            'id': target_user.id,
+            'name': target_user.name,
+            'email': target_user.email,
+            'avatar': target_user.avatar,
         }
 
     return JsonResponse(res, status=200)

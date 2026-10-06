@@ -236,7 +236,7 @@ def send_enrollment_confirmation_email(user, course, payment=None):
         return True, "Email already dispatched."
     _SENT_ENROLLMENT_EMAILS.add(dedup_key)
 
-    frontend_url = getattr(settings, 'USER_FRONTEND_URL', 'https://e-learning-user.netlify.app')
+    frontend_url = getattr(settings, 'USER_FRONTEND_URL', None) or os.getenv('USER_FRONTEND_URL', 'https://jasimdigital.online')
     if getattr(settings, 'DEBUG', False) and not os.getenv('USER_FRONTEND_URL'):
         frontend_url = 'http://localhost:5173'
     frontend_url = str(frontend_url).rstrip('/')
