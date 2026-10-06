@@ -143,8 +143,9 @@ CORS_ALLOWED_ORIGINS = [
     'http://jasimdigital.online',
     'https://api.jasimdigital.online',
     'http://api.jasimdigital.online',
-    'https://e-learning-user.netlify.app',
+    # 'https://e-learning-user.netlify.app',
     'https://e-learningadmin-fe.netlify.app',
+    'https://e-learning-userfe.netlify.app'
 ]
 
 CSRF_TRUSTED_ORIGINS = [
@@ -152,8 +153,10 @@ CSRF_TRUSTED_ORIGINS = [
     'http://jasimdigital.online',
     'https://api.jasimdigital.online',
     'http://api.jasimdigital.online',
-    'https://e-learning-user.netlify.app',
+    # 'https://e-learning-user.netlify.app',
     'https://e-learningadmin-fe.netlify.app',
+    'https://e-learning-userfe.netlify.app'
+    
 ]
 
 CORS_ALLOW_ALL_ORIGINS = DEBUG

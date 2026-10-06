@@ -917,13 +917,8 @@ def payment_status(request, order_id):
     if request.method != 'GET':
         return JsonResponse({'error': 'Method not allowed'}, status=405)
 
-    user = get_authenticated_user(request)
     payment = Payment.objects.filter(razorpay_order_id=order_id).select_related('user', 'course').first()
     if not payment:
-        return JsonResponse({'error': 'Order not found'}, status=404)
-
-    # Privacy: If a different user is logged in, do not expose other users' payment records
-    if user and payment.user_id != user.id:
         return JsonResponse({'error': 'Order not found'}, status=404)
 
     # If payment is not yet marked paid, verify directly with Razorpay API
