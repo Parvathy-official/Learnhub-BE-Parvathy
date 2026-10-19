@@ -130,8 +130,8 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Frontend URLs
-USER_FRONTEND_URL = os.getenv('USER_FRONTEND_URL', 'https://jasimdigital.online')
-ADMIN_FRONTEND_URL = os.getenv('ADMIN_FRONTEND_URL', 'https://e-learningadmin-fe.netlify.app')
+USER_FRONTEND_URL = os.getenv('USER_FRONTEND_URL', 'https://learnwithp.online')
+ADMIN_FRONTEND_URL = os.getenv('ADMIN_FRONTEND_URL', 'https://admin.learnwithp.online')
 
 # CORS configuration
 CORS_ALLOWED_ORIGINS = [
@@ -139,11 +139,9 @@ CORS_ALLOWED_ORIGINS = [
     ADMIN_FRONTEND_URL,
     'http://localhost:5173',
     'http://localhost:5174',
-    'http://localhost:5175',
-    'http://localhost:3000',
-    'http://127.0.0.1:5174',
-    'http://127.0.0.1:5175',
     'https://api.learnwithp.online',
+    'https://learnwithp.online',
+    'https://admin.learnwithp.online',
     'https://learnwithpadmin.netlify.app',
     'https://learnwithp.netlify.app'
 ]
@@ -151,7 +149,9 @@ CORS_ALLOWED_ORIGINS = [
 CSRF_TRUSTED_ORIGINS = [
     'https://api.learnwithp.online',
     'https://learnwithpadmin.netlify.app',
-    'https://learnwithp.netlify.app'
+    'https://learnwithp.netlify.app',
+    'https://learnwithp.online',
+    'https://admin.learnwithp.online',
     
 ]
 
