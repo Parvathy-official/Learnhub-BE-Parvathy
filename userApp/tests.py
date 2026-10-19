@@ -781,3 +781,343 @@ class GuestCheckoutAndPasswordlessOTPSecurityTests(TestCase):
         self.assertEqual(lesson2['description'], "")
 
 
+class CompletedEnrollmentAccessTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+        # Instructor
+        self.instructor = Instructor.objects.create(
+            name='Devon Vance',
+            title='Growth Architect'
+        )
+
+        # Course
+        self.course = Course.objects.create(
+            title='Performance Marketing Blueprint',
+            slug='performance-marketing-blueprint',
+            price=499.00,
+            original_price=1999.00,
+            is_published=True,
+            instructor=self.instructor
+        )
+
+        # Module
+        self.module = Module.objects.create(
+            course=self.course,
+            title='Module 1: Strategy',
+            order=1
+        )
+
+        # Lessons
+        self.preview_lesson = Lesson.objects.create(
+            module=self.module,
+            title='Lesson 1: Intro (Preview)',
+            duration='10:00',
+            duration_seconds=600,
+            is_preview=True,
+            order=1
+        )
+        self.lesson_2 = Lesson.objects.create(
+            module=self.module,
+            title='Lesson 2: Core Ads (Protected)',
+            duration='15:00',
+            duration_seconds=900,
+            is_preview=False,
+            order=2
+        )
+        self.lesson_3 = Lesson.objects.create(
+            module=self.module,
+            title='Lesson 3: Scaling (Protected)',
+            duration='20:00',
+            duration_seconds=1200,
+            is_preview=False,
+            order=3
+        )
+
+        # 1. Active student
+        self.active_student = User.objects.create_user(
+            email='active.student@example.com',
+            name='Active Student',
+            password='password123'
+        )
+        self.active_tokens = generate_tokens(self.active_student)
+        self.active_headers = {'HTTP_AUTHORIZATION': f"Bearer {self.active_tokens['access']}"}
+        self.active_payment = Payment.objects.create(
+            user=self.active_student,
+            course=self.course,
+            razorpay_order_id='ord_active_123',
+            amount=49900,
+            status='paid'
+        )
+        self.active_enrollment = Enrollment.objects.create(
+            user=self.active_student,
+            course=self.course,
+            payment=self.active_payment,
+            status='active',
+            progress_percentage=33,
+            last_watched_lesson=self.preview_lesson,
+            last_watched_position=300
+        )
+
+        # 2. Completed student
+        self.completed_student = User.objects.create_user(
+            email='completed.student@example.com',
+            name='Completed Student',
+            password='password123'
+        )
+        self.completed_tokens = generate_tokens(self.completed_student)
+        self.completed_headers = {'HTTP_AUTHORIZATION': f"Bearer {self.completed_tokens['access']}"}
+        self.completed_payment = Payment.objects.create(
+            user=self.completed_student,
+            course=self.course,
+            razorpay_order_id='ord_completed_456',
+            amount=49900,
+            status='paid'
+        )
+        self.completed_enrollment = Enrollment.objects.create(
+            user=self.completed_student,
+            course=self.course,
+            payment=self.completed_payment,
+            status='completed',
+            progress_percentage=100,
+            last_watched_lesson=self.lesson_3,
+            last_watched_position=1200
+        )
+        # Mark all lessons completed for completed student
+        for lesson in [self.preview_lesson, self.lesson_2, self.lesson_3]:
+            LessonProgress.objects.create(
+                user=self.completed_student,
+                lesson=lesson,
+                watched_seconds=lesson.duration_seconds,
+                duration_seconds=lesson.duration_seconds,
+                progress_percentage=100,
+                completed=True
+            )
+
+        # 3. Student with no enrollment
+        self.unregistered_student = User.objects.create_user(
+            email='no.enrollment@example.com',
+            name='No Enrollment',
+            password='password123'
+        )
+        self.unreg_tokens = generate_tokens(self.unregistered_student)
+        self.unreg_headers = {'HTTP_AUTHORIZATION': f"Bearer {self.unreg_tokens['access']}"}
+
+        # 4. Student with pending payment
+        self.pending_student = User.objects.create_user(
+            email='pending.student@example.com',
+            name='Pending Student',
+            password='password123'
+        )
+        self.pending_tokens = generate_tokens(self.pending_student)
+        self.pending_headers = {'HTTP_AUTHORIZATION': f"Bearer {self.pending_tokens['access']}"}
+        self.pending_payment = Payment.objects.create(
+            user=self.pending_student,
+            course=self.course,
+            razorpay_order_id='ord_pending_789',
+            amount=49900,
+            status='created'
+        )
+
+        # 5. Student with failed payment
+        self.failed_student = User.objects.create_user(
+            email='failed.student@example.com',
+            name='Failed Student',
+            password='password123'
+        )
+        self.failed_tokens = generate_tokens(self.failed_student)
+        self.failed_headers = {'HTTP_AUTHORIZATION': f"Bearer {self.failed_tokens['access']}"}
+        self.failed_payment = Payment.objects.create(
+            user=self.failed_student,
+            course=self.course,
+            razorpay_order_id='ord_failed_999',
+            amount=49900,
+            status='failed'
+        )
+
+        # 6. Student with cancelled enrollment
+        self.cancelled_student = User.objects.create_user(
+            email='cancelled.student@example.com',
+            name='Cancelled Student',
+            password='password123'
+        )
+        self.cancelled_tokens = generate_tokens(self.cancelled_student)
+        self.cancelled_headers = {'HTTP_AUTHORIZATION': f"Bearer {self.cancelled_tokens['access']}"}
+        self.cancelled_enrollment = Enrollment.objects.create(
+            user=self.cancelled_student,
+            course=self.course,
+            status='cancelled',
+            progress_percentage=50
+        )
+
+    def test_scenario_1_active_student_can_open_and_continue_course(self):
+        """1. A student with an Active enrollment can open and continue the course."""
+        # Course access check
+        res_access = self.client.get(f'/api/courses/{self.course.id}/access/', **self.active_headers)
+        self.assertEqual(res_access.status_code, 200)
+        self.assertTrue(res_access.json()['has_access'])
+        self.assertEqual(res_access.json()['enrollment']['status'], 'active')
+
+        # Course detail: has_access is True, lessons unlocked
+        res_detail = self.client.get(f'/api/courses/{self.course.id}/', **self.active_headers)
+        self.assertEqual(res_detail.status_code, 200)
+        self.assertTrue(res_detail.json()['has_access'])
+        lessons = res_detail.json()['modules'][0]['lessons']
+        for l in lessons:
+            self.assertFalse(l['is_locked'], f"Lesson {l['title']} should not be locked for active student")
+
+        # Protected video access
+        res_video = self.client.get(f'/api/courses/{self.course.id}/lessons/{self.lesson_2.id}/video/', **self.active_headers)
+        self.assertEqual(res_video.status_code, 200)
+        self.assertIn('video_url', res_video.json())
+
+    def test_scenario_2_completed_student_can_reopen_and_view_content(self):
+        """2. A student with a Completed enrollment can reopen the course and view the content."""
+        # Course access check returns has_access: True
+        res_access = self.client.get(f'/api/courses/{self.course.id}/access/', **self.completed_headers)
+        self.assertEqual(res_access.status_code, 200)
+        self.assertTrue(res_access.json()['has_access'])
+        self.assertEqual(res_access.json()['enrollment']['status'], 'completed')
+
+        # Course detail: has_access is True and lessons are unlocked
+        res_detail = self.client.get(f'/api/courses/{self.course.id}/', **self.completed_headers)
+        self.assertEqual(res_detail.status_code, 200)
+        self.assertTrue(res_detail.json()['has_access'])
+        lessons = res_detail.json()['modules'][0]['lessons']
+        for l in lessons:
+            self.assertFalse(l['is_locked'], f"Lesson {l['title']} should not be locked for completed student")
+
+        # Protected video access succeeds (NOT 403!)
+        res_video = self.client.get(f'/api/courses/{self.course.id}/lessons/{self.lesson_2.id}/video/', **self.completed_headers)
+        self.assertEqual(res_video.status_code, 200)
+        self.assertIn('video_url', res_video.json())
+
+        # Final lesson video also accessible
+        res_video3 = self.client.get(f'/api/courses/{self.course.id}/lessons/{self.lesson_3.id}/video/', **self.completed_headers)
+        self.assertEqual(res_video3.status_code, 200)
+        self.assertIn('video_url', res_video3.json())
+
+    def test_scenario_3_student_with_no_enrollment_sees_purchase_requirement(self):
+        """3. A student with no enrollment sees the purchase screen / denied access."""
+        res_access = self.client.get(f'/api/courses/{self.course.id}/access/', **self.unreg_headers)
+        self.assertEqual(res_access.status_code, 200)
+        self.assertFalse(res_access.json()['has_access'])
+        self.assertIsNone(res_access.json()['enrollment'])
+
+        # Protected lesson video is 403 Forbidden
+        res_video = self.client.get(f'/api/courses/{self.course.id}/lessons/{self.lesson_2.id}/video/', **self.unreg_headers)
+        self.assertEqual(res_video.status_code, 403)
+
+        # Course detail has_access is False, protected lessons are locked
+        res_detail = self.client.get(f'/api/courses/{self.course.id}/', **self.unreg_headers)
+        self.assertEqual(res_detail.status_code, 200)
+        self.assertFalse(res_detail.json()['has_access'])
+        lessons = res_detail.json()['modules'][0]['lessons']
+        lesson_prot = next(l for l in lessons if str(l['id']) == str(self.lesson_2.id))
+        self.assertTrue(lesson_prot['is_locked'])
+
+    def test_scenario_4_pending_or_failed_payment_cannot_access_paid_content(self):
+        """4. A student with a pending or failed payment cannot access paid course content."""
+        # Pending payment
+        res_pending_access = self.client.get(f'/api/courses/{self.course.id}/access/', **self.pending_headers)
+        self.assertEqual(res_pending_access.status_code, 200)
+        self.assertFalse(res_pending_access.json()['has_access'])
+        res_pending_video = self.client.get(f'/api/courses/{self.course.id}/lessons/{self.lesson_2.id}/video/', **self.pending_headers)
+        self.assertEqual(res_pending_video.status_code, 403)
+
+        # Failed payment
+        res_failed_access = self.client.get(f'/api/courses/{self.course.id}/access/', **self.failed_headers)
+        self.assertEqual(res_failed_access.status_code, 200)
+        self.assertFalse(res_failed_access.json()['has_access'])
+        res_failed_video = self.client.get(f'/api/courses/{self.course.id}/lessons/{self.lesson_2.id}/video/', **self.failed_headers)
+        self.assertEqual(res_failed_video.status_code, 403)
+
+        # Cancelled enrollment
+        res_cancelled_access = self.client.get(f'/api/courses/{self.course.id}/access/', **self.cancelled_headers)
+        self.assertEqual(res_cancelled_access.status_code, 200)
+        self.assertFalse(res_cancelled_access.json()['has_access'])
+        res_cancelled_video = self.client.get(f'/api/courses/{self.course.id}/lessons/{self.lesson_2.id}/video/', **self.cancelled_headers)
+        self.assertEqual(res_cancelled_video.status_code, 403)
+
+    def test_scenario_5_completed_lessons_and_progress_remain_unchanged(self):
+        """5. A student's completed lessons and progress remain unchanged after reopening the course."""
+        # Check completed student's enrollment and progress
+        my_enr = self.client.get('/api/enrollments/my/', **self.completed_headers)
+        self.assertEqual(my_enr.status_code, 200)
+        data = my_enr.json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]['status'], 'completed')
+        self.assertEqual(data[0]['progress_percentage'], 100)
+        self.assertEqual(len(data[0]['completed_lessons']), 3)
+
+        # Reopen course player access
+        res_access = self.client.get(f'/api/courses/{self.course.id}/access/', **self.completed_headers)
+        self.assertEqual(res_access.status_code, 200)
+        self.assertTrue(res_access.json()['has_access'])
+
+        # Verify progress has not been altered
+        self.completed_enrollment.refresh_from_db()
+        self.assertEqual(self.completed_enrollment.status, 'completed')
+        self.assertEqual(self.completed_enrollment.progress_percentage, 100)
+        self.assertEqual(
+            LessonProgress.objects.filter(user=self.completed_student, completed=True).count(),
+            3
+        )
+
+    def test_scenario_6_unauthorized_student_cannot_access_another_students_course(self):
+        """6. An unauthorized student cannot access another student's course or payment status."""
+        # Unregistered student cannot access Active student's payment order
+        res_pay = self.client.get(
+            f'/api/payments/status/{self.active_payment.razorpay_order_id}/',
+            **self.unreg_headers
+        )
+        self.assertEqual(res_pay.status_code, 404)
+
+        # Unregistered student cannot complete or update progress for active student's course
+        res_prog = self.client.patch(
+            f'/api/courses/{self.course.id}/lessons/{self.lesson_2.id}/progress/',
+            data=json.dumps({'watched_seconds': 500, 'duration_seconds': 900}),
+            content_type='application/json',
+            **self.unreg_headers
+        )
+        self.assertEqual(res_prog.status_code, 403)
+
+    def test_scenario_7_completed_student_cannot_create_duplicate_payment(self):
+        """7. An already completed student cannot create another payment order (returns 409)."""
+        res = self.client.post('/api/payments/create-order/', data=json.dumps({
+            'course_id': self.course.id,
+            'name': 'Completed Student',
+            'email': self.completed_student.email
+        }), content_type='application/json')
+        self.assertEqual(res.status_code, 409)
+        self.assertIn('already enrolled', res.json()['error'].lower())
+
+    def test_scenario_8_lesson_completion_progress_calculation(self):
+        """8. Enrollment status updates to completed only when all lessons are completed."""
+        # Active student completes lesson 2
+        res2 = self.client.post(
+            f'/api/courses/{self.course.id}/lessons/{self.lesson_2.id}/complete/',
+            **self.active_headers
+        )
+        self.assertEqual(res2.status_code, 200)
+        self.active_enrollment.refresh_from_db()
+        # 1 out of 3 protected completed + preview = not all done yet
+        self.assertEqual(self.active_enrollment.status, 'active')
+        self.assertLess(self.active_enrollment.progress_percentage, 100)
+
+        # Complete lesson 1 and lesson 3 as well
+        self.client.post(f'/api/courses/{self.course.id}/lessons/{self.preview_lesson.id}/complete/', **self.active_headers)
+        self.client.post(f'/api/courses/{self.course.id}/lessons/{self.lesson_3.id}/complete/', **self.active_headers)
+
+        self.active_enrollment.refresh_from_db()
+        self.assertEqual(self.active_enrollment.status, 'completed')
+        self.assertEqual(self.active_enrollment.progress_percentage, 100)
+
+        # And after becoming completed, student STILL has full access!
+        res_access = self.client.get(f'/api/courses/{self.course.id}/access/', **self.active_headers)
+        self.assertTrue(res_access.json()['has_access'])
+        res_video = self.client.get(f'/api/courses/{self.course.id}/lessons/{self.lesson_2.id}/video/', **self.active_headers)
+        self.assertEqual(res_video.status_code, 200)
+
+
+

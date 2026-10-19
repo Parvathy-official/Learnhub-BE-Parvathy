@@ -25,23 +25,23 @@ def _send_otp_email_smtp(subject: str, message: str, from_email: str, recipient_
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #030708; color: #F1F5F9; margin: 0; padding: 32px 16px;">
           <div style="max-width: 480px; margin: 0 auto; background-color: #0B1116; border: 1px solid rgba(6, 182, 212, 0.3); border-radius: 14px; padding: 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
             <div style="text-align: center; margin-bottom: 24px;">
-              <h2 style="color: #06B6D4; margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">Flair Academy</h2>
-              <p style="color: #94A3B8; font-size: 13px; margin: 4px 0 0;">Course Access Verification</p>
+              <h2 style="color: #F59E0B; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">with P</h2>
+              <p style="color: #94A3B8; font-size: 13px; margin: 4px 0 0;">Learn • Build • Earn — Course Access</p>
             </div>
             <p style="color: #E2E8F0; font-size: 15px; line-height: 1.5; margin: 0 0 16px;">Hello,</p>
             <p style="color: #94A3B8; font-size: 14px; line-height: 1.5; margin: 0 0 20px;">Your one-time verification code to access your enrolled masterclass is:</p>
-            <div style="background: rgba(6, 182, 212, 0.1); border: 1.5px solid #06B6D4; border-radius: 10px; text-align: center; padding: 18px; margin: 0 0 24px;">
-              <span style="font-size: 34px; font-weight: 800; letter-spacing: 8px; color: #38BDF8; font-family: 'Courier New', Courier, monospace;">{raw_otp}</span>
+            <div style="background: rgba(245, 158, 11, 0.1); border: 1.5px solid #F59E0B; border-radius: 10px; text-align: center; padding: 18px; margin: 0 0 24px;">
+              <span style="font-size: 34px; font-weight: 800; letter-spacing: 8px; color: #FBBF24; font-family: 'Courier New', Courier, monospace;">{raw_otp}</span>
             </div>
             <p style="color: #94A3B8; font-size: 13px; line-height: 1.5; margin: 0 0 20px;">This code will expire in <strong>15 minutes</strong>. If you did not request this code, you can safely ignore this email.</p>
             <hr style="border: none; border-top: 1px solid rgba(255, 255, 255, 0.1); margin: 24px 0 16px;">
-            <p style="color: #64748B; font-size: 12px; text-align: center; margin: 0;">&copy; Flair Academy • Digital Product & Marketing Masterclass</p>
+            <p style="color: #64748B; font-size: 12px; text-align: center; margin: 0;">&copy; with P • Learn • Build • Earn</p>
           </div>
         </body>
         </html>
         """
 
-    sender = from_email or getattr(settings, 'DEFAULT_FROM_EMAIL', None) or getattr(settings, 'EMAIL_HOST_USER', 'noreply@flairacademy.com')
+    sender = from_email or getattr(settings, 'DEFAULT_FROM_EMAIL', None) or getattr(settings, 'EMAIL_HOST_USER', 'noreply@withp.com')
     try:
         logger.info("OTP FLOW: email send started")
         send_mail(
@@ -128,15 +128,15 @@ def create_and_send_otp(email: str) -> tuple[bool, str]:
     logger.info("OTP FLOW: database record created")
 
     # Unique subject with code prevents Gmail from collapsing new messages into old threads
-    subject = f"Your Flair Academy Access Code is {raw_otp}"
+    subject = f"Your with P Access Code is {raw_otp}"
     message = (
         f"Hello,\n\n"
         f"Your one-time verification code is: {raw_otp}\n\n"
         f"This code will expire in 15 minutes. Enter this code to access your purchased courses.\n\n"
         f"If you did not request this code, please ignore this email.\n\n"
-        f"— Flair Academy"
+        f"— with P (Learn • Build • Earn)"
     )
-    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'Flair Academy <noreply@flairacademy.com>')
+    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'with P <noreply@withp.com>')
     logger.info("OTP FLOW: email message constructed")
 
     # Send verification email via configured SMTP backend
@@ -267,8 +267,8 @@ def send_enrollment_confirmation_email(user, course, payment=None):
       <div style="max-width: 520px; margin: 0 auto; background-color: #0B1116; border: 1px solid rgba(6, 182, 212, 0.35); border-radius: 16px; padding: 32px; box-shadow: 0 15px 40px rgba(0,0,0,0.8), 0 0 25px rgba(6,182,212,0.15);">
         
         <div style="text-align: center; margin-bottom: 24px;">
-          <h2 style="color: #06B6D4; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">Flair Academy</h2>
-          <span style="display: inline-block; background: rgba(6, 182, 212, 0.12); border: 1px solid rgba(6, 182, 212, 0.4); color: #38BDF8; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; padding: 3px 10px; border-radius: 9999px; margin-top: 8px;">
+          <h2 style="color: #F59E0B; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">with P</h2>
+          <span style="display: inline-block; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.4); color: #FBBF24; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; padding: 3px 10px; border-radius: 9999px; margin-top: 8px;">
             ● Enrolled Student Confirmation
           </span>
         </div>
@@ -281,31 +281,31 @@ def send_enrollment_confirmation_email(user, course, payment=None):
 
         <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 18px; margin: 0 0 24px;">
           <h3 style="color: #FFFFFF; font-size: 16px; font-weight: 700; margin: 0 0 6px;">{course_title}</h3>
-          <p style="color: #94A3B8; font-size: 13px; margin: 0 0 12px;">3-Hour Practical Masterclass • AI-Powered Curriculum</p>
+          <p style="color: #94A3B8; font-size: 13px; margin: 0 0 12px;">Practical Masterclass • Learn • Build • Earn</p>
           <div style="border-top: 1px dashed rgba(255, 255, 255, 0.1); padding-top: 10px; font-size: 12px; color: #94A3B8;">
-            <span>Amount Paid: <strong style="color: #38BDF8;">{amount_str}</strong></span> &nbsp;•&nbsp; 
+            <span>Amount Paid: <strong style="color: #FBBF24;">{amount_str}</strong></span> &nbsp;•&nbsp; 
             <span>Order ID: <span style="font-family: monospace; color: #E2E8F0;">{order_id_str}</span></span>
           </div>
         </div>
 
         <div style="text-align: center; margin: 0 0 28px;">
-          <a href="{course_url}" style="display: inline-block; background: linear-gradient(135deg, #06B6D4 0%, #0EA5E9 100%); color: #030708; font-size: 15px; font-weight: 800; text-decoration: none; padding: 14px 32px; border-radius: 10px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.4); letter-spacing: 0.02em;">
+          <a href="{course_url}" style="display: inline-block; background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color: #030708; font-size: 15px; font-weight: 800; text-decoration: none; padding: 14px 32px; border-radius: 10px; box-shadow: 0 0 20px rgba(245, 158, 11, 0.4); letter-spacing: 0.02em;">
             ▶ START LEARNING NOW &rarr;
           </a>
         </div>
 
         <p style="color: #94A3B8; font-size: 13px; line-height: 1.5; margin: 0 0 20px; text-align: center;">
-          You can pick up right where you left off anytime at your <a href="{my_learning_url}" style="color: #38BDF8; text-decoration: underline;">My Learning Dashboard</a>.
+          You can pick up right where you left off anytime at your <a href="{my_learning_url}" style="color: #FBBF24; text-decoration: underline;">My Learning Dashboard</a>.
         </p>
 
         <hr style="border: none; border-top: 1px solid rgba(255, 255, 255, 0.1); margin: 24px 0 16px;">
-        <p style="color: #64748B; font-size: 12px; text-align: center; margin: 0;">&copy; Flair Academy • Digital Product & Marketing Masterclass</p>
+        <p style="color: #64748B; font-size: 12px; text-align: center; margin: 0;">&copy; with P • Learn • Build • Earn</p>
       </div>
     </body>
     </html>
     """
 
-    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'Flair Academy <noreply@flairacademy.com>')
+    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'with P <noreply@withp.com>')
 
     import threading
     email_thread = threading.Thread(

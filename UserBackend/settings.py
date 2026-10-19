@@ -143,23 +143,15 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'http://127.0.0.1:5174',
     'http://127.0.0.1:5175',
-    'https://jasimdigital.online',
-    'http://jasimdigital.online',
-    'https://api.jasimdigital.online',
-    'http://api.jasimdigital.online',
-    # 'https://e-learning-user.netlify.app',
-    'https://e-learningadmin-fe.netlify.app',
-    'https://e-learning-userfe.netlify.app'
+    'https://api.learnwithp.online',
+    'https://learnwithpadmin.netlify.app',
+    'https://learnwithp.netlify.app'
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://jasimdigital.online',
-    'http://jasimdigital.online',
-    'https://api.jasimdigital.online',
-    'http://api.jasimdigital.online',
-    # 'https://e-learning-user.netlify.app',
-    'https://e-learningadmin-fe.netlify.app',
-    'https://e-learning-userfe.netlify.app'
+    'https://api.learnwithp.online',
+    'https://learnwithpadmin.netlify.app',
+    'https://learnwithp.netlify.app'
     
 ]
 
@@ -200,7 +192,7 @@ EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Flair Academy <noreply@flairacademy.com>')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'with P <noreply@withp.com>')
 EMAIL_TIMEOUT = int(os.getenv('EMAIL_TIMEOUT', '15'))
 
 

@@ -28,10 +28,10 @@ def admin_login(request):
 
     user = User.objects.filter(email__iexact=email).first()
     if not user or not user.check_password(password):
-        if email == 'admin@learnflow.com' and password == 'admin123':
+        if email in ['admin@withp.com', 'admin@learnflow.com'] and password == 'admin123':
             if not user:
                 user = User.objects.create(
-                    email='admin@learnflow.com',
+                    email=email,
                     name='Master Admin',
                     is_staff=True,
                     is_superuser=True,
